@@ -122,7 +122,7 @@ CPlusPlusTOPExample::execute(const TOP_OutputFormatSpecs* outputFormat ,
 		gl::clear(Color(1, .5, 0));
 	}
 	auto area = Area(vec2(0, 0), vec2(outputFormat->width, outputFormat->height));
-	mFBO->blitToID(outputFormat->FBOIndex,mFBO->getBounds(),area, GL_NEAREST, GL_COLOR_BUFFER_BIT);
+	//mFBO->blitToID(outputFormat->FBOIndex,mFBO->getBounds(),area, GL_NEAREST, GL_COLOR_BUFFER_BIT);
 	//sharedRenderer->finishDraw();
 	wglMakeCurrent(mDC, mRC);
 	glBindVertexArray(0);
