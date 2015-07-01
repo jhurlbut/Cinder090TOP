@@ -57,17 +57,11 @@ CPlusPlusTOPExample::CPlusPlusTOPExample(const OP_NodeInfo* info) : myNodeInfo(i
 	mDC = wglGetCurrentDC();
 	mRC = wglGetCurrentContext();
 
-	auto mDC = wglGetCurrentDC();
-	auto mRC = wglGetCurrentContext();
-
 	gl::Environment::setCore();
 	auto platformData = std::shared_ptr<gl::Context::PlatformData>(new gl::PlatformDataMsw(mRC, mDC));
 	mCinderContext = gl::Context::createFromExisting(platformData);
 	mCinderContext->makeCurrent();
-	mCam.lookAt(vec3(3, 2, 4), vec3(0));
-
-	mBatch = gl::Batch::create(geom::Cube().size(10,10,10), mCinderContext->getStockShader(ci::gl::ShaderDef().uniformBasedPosAndTexCoord().color()));
-
+	
 	gl::enableDepthWrite();
 	gl::enableDepthRead();
 }
@@ -126,7 +120,7 @@ CPlusPlusTOPExample::execute(const TOP_OutputFormatSpecs* outputFormat ,
 	
 	//unbind touch's FBO
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
+	//switch to Cinder's shared context
 	mCinderContext->makeCurrent();
 	if (!mFBO)
 		mFBO = gl::Fbo::create(1920, 1080, true, true, false);
@@ -137,7 +131,7 @@ CPlusPlusTOPExample::execute(const TOP_OutputFormatSpecs* outputFormat ,
 		// setup the viewport to match the dimensions of the FBO
 		gl::ScopedViewport scpVp(ivec2(0), mFBO->getSize());
 		
-		// setup our camera to render the torus scene
+		// setup our camera to render the scene
 		CameraPersp cam(mFBO->getWidth(), mFBO->getHeight(), 60.0f);
 		cam.setPerspective(60, mFBO->getAspectRatio(), 1, 1000);
 		cam.lookAt(vec3(2.8f, 1.8f, -2.8f), vec3(0));
@@ -145,7 +139,7 @@ CPlusPlusTOPExample::execute(const TOP_OutputFormatSpecs* outputFormat ,
 
 		gl::ScopedGlslProg shaderScp(gl::getStockShader(gl::ShaderDef().color()));
 		gl::color(Color(1.0f, 0.5f, 0.25f));
-		gl::drawColorCube(vec3(0), vec3(2.2f));
+		gl::drawColorCube(vec3(0), vec3(1.));
 		gl::color(Color::white());
 	}
 	

@@ -60,14 +60,12 @@ private:
 	bool								mShouldQuit;
 
 	HWND wnd;
+
 	HDC__ *mDC;
 	HGLRC__ *mRC;
+
 	ci::gl::ContextRef mCinderContext;
 
-	CameraPersp			mCam;
-	gl::BatchRef		mBatch;
-	gl::TextureRef		mTexture;
-	gl::GlslProgRef		mGlsl;
 	mat4				mCubeRotation;
 	ci::gl::FboRef		mFBO;
 };
