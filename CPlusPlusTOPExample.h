@@ -9,6 +9,8 @@
  */
 
 #include "cinder/gl/gl.h"
+#include "cinder/app/AppBase.h"
+#include "cinder/app/RendererGl.h"
 #include "TOP_CPlusPlusBase.h"
 
 using namespace ci;
@@ -57,4 +59,9 @@ private:
 	bool								mShouldQuit;
 
 	HWND wnd;
+	HDC__ *mDC;
+	HGLRC__ *mRC;
+
+	cinder::app::RendererRef sharedRenderer; 
+	ci::gl::FboRef	mFBO;
 };

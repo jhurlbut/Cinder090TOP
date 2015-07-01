@@ -10,6 +10,7 @@
 
 #include "CPlusPlusTOPExample.h"
 
+
 using namespace ci;
 
 // These functions are basic C function, which the DLL loader can find
@@ -54,7 +55,12 @@ CPlusPlusTOPExample::CPlusPlusTOPExample(const OP_NodeInfo* info) : myNodeInfo(i
 	myRotation = 0.0;
 	myExecuteCount = 0;
 	wnd = info->mainWindowHandle;
-	
+	mDC = wglGetCurrentDC();
+	mRC = wglGetCurrentContext();
+	gl::Environment::setCore();
+	cinder::app::RendererRef renderer(new ci::app::RendererGl());
+	sharedRenderer = renderer;
+	sharedRenderer->setup(wnd, mDC, renderer);
 }
 
 CPlusPlusTOPExample::~CPlusPlusTOPExample()
@@ -87,6 +93,7 @@ CPlusPlusTOPExample::execute(const TOP_OutputFormatSpecs* outputFormat ,
 							OP_Inputs* inputs,
 							void* reserved)
 {
+
 	myExecuteCount++;
 
 	double speed = inputs->getParDouble("Speed");
@@ -107,14 +114,18 @@ CPlusPlusTOPExample::execute(const TOP_OutputFormatSpecs* outputFormat ,
 	int x = width / 2;
 	int y = height / 2;
 
-	auto mDC = wglGetCurrentDC();
-	auto mRC = wglGetCurrentContext();
-
-	gl::Environment::setCore();
-	auto platformData = std::shared_ptr<gl::Context::PlatformData>(new gl::PlatformDataMsw(mRC, mDC));
-	ci::gl::ContextRef mCinderContext = gl::Context::createFromExisting(platformData);
-	mCinderContext->makeCurrent();
-	
+	sharedRenderer->startDraw();
+	if (!mFBO)
+		mFBO = gl::Fbo::create(1920, 1080, true, true, false);
+	{
+		gl::ScopedFramebuffer fbScp(mFBO);
+		gl::clear(Color(1, .5, 0));
+	}
+	auto area = Area(vec2(0, 0), vec2(outputFormat->width, outputFormat->height));
+	mFBO->blitToID(outputFormat->FBOIndex,mFBO->getBounds(),area, GL_NEAREST, GL_COLOR_BUFFER_BIT);
+	//sharedRenderer->finishDraw();
+	wglMakeCurrent(mDC, mRC);
+	glBindVertexArray(0);
 }
 
 int
