@@ -11,6 +11,7 @@
 #include "cinder/gl/gl.h"
 #include "cinder/app/AppBase.h"
 #include "cinder/app/RendererGl.h"
+#include "cinder/gl/Shader.h"
 #include "TOP_CPlusPlusBase.h"
 
 using namespace ci;
@@ -61,7 +62,12 @@ private:
 	HWND wnd;
 	HDC__ *mDC;
 	HGLRC__ *mRC;
+	ci::gl::ContextRef mCinderContext;
 
-	cinder::app::RendererRef sharedRenderer; 
-	ci::gl::FboRef	mFBO;
+	CameraPersp			mCam;
+	gl::BatchRef		mBatch;
+	gl::TextureRef		mTexture;
+	gl::GlslProgRef		mGlsl;
+	mat4				mCubeRotation;
+	ci::gl::FboRef		mFBO;
 };

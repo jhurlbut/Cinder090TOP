@@ -10,7 +10,6 @@
 
 #include "CPlusPlusTOPExample.h"
 
-
 using namespace ci;
 
 // These functions are basic C function, which the DLL loader can find
@@ -57,10 +56,20 @@ CPlusPlusTOPExample::CPlusPlusTOPExample(const OP_NodeInfo* info) : myNodeInfo(i
 	wnd = info->mainWindowHandle;
 	mDC = wglGetCurrentDC();
 	mRC = wglGetCurrentContext();
+
+	auto mDC = wglGetCurrentDC();
+	auto mRC = wglGetCurrentContext();
+
 	gl::Environment::setCore();
-	cinder::app::RendererRef renderer(new ci::app::RendererGl());
-	sharedRenderer = renderer;
-	sharedRenderer->setup(wnd, mDC, renderer);
+	auto platformData = std::shared_ptr<gl::Context::PlatformData>(new gl::PlatformDataMsw(mRC, mDC));
+	mCinderContext = gl::Context::createFromExisting(platformData);
+	mCinderContext->makeCurrent();
+	mCam.lookAt(vec3(3, 2, 4), vec3(0));
+
+	mBatch = gl::Batch::create(geom::Cube().size(10,10,10), mCinderContext->getStockShader(ci::gl::ShaderDef().uniformBasedPosAndTexCoord().color()));
+
+	gl::enableDepthWrite();
+	gl::enableDepthRead();
 }
 
 CPlusPlusTOPExample::~CPlusPlusTOPExample()
@@ -113,18 +122,42 @@ CPlusPlusTOPExample::execute(const TOP_OutputFormatSpecs* outputFormat ,
 
 	int x = width / 2;
 	int y = height / 2;
+	mCubeRotation *= rotate(toRadians(0.2f), normalize(vec3(0, 1, 0)));
+	
+	//unbind touch's FBO
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	sharedRenderer->startDraw();
+	mCinderContext->makeCurrent();
 	if (!mFBO)
 		mFBO = gl::Fbo::create(1920, 1080, true, true, false);
 	{
 		gl::ScopedFramebuffer fbScp(mFBO);
 		gl::clear(Color(1, .5, 0));
+
+		// setup the viewport to match the dimensions of the FBO
+		gl::ScopedViewport scpVp(ivec2(0), mFBO->getSize());
+		
+		// setup our camera to render the torus scene
+		CameraPersp cam(mFBO->getWidth(), mFBO->getHeight(), 60.0f);
+		cam.setPerspective(60, mFBO->getAspectRatio(), 1, 1000);
+		cam.lookAt(vec3(2.8f, 1.8f, -2.8f), vec3(0));
+		gl::setMatrices(cam);
+
+		gl::ScopedGlslProg shaderScp(gl::getStockShader(gl::ShaderDef().color()));
+		gl::color(Color(1.0f, 0.5f, 0.25f));
+		gl::drawColorCube(vec3(0), vec3(2.2f));
+		gl::color(Color::white());
 	}
-	auto area = Area(vec2(0, 0), vec2(outputFormat->width, outputFormat->height));
-	//mFBO->blitToID(outputFormat->FBOIndex,mFBO->getBounds(),area, GL_NEAREST, GL_COLOR_BUFFER_BIT);
-	//sharedRenderer->finishDraw();
+	
 	wglMakeCurrent(mDC, mRC);
+	
+	//rebind touch's FBO and draw our FBO's texture
+	glBindFramebuffer(GL_FRAMEBUFFER, outputFormat->FBOIndex);
+	gl::ScopedViewport scpVp(ivec2(0), vec2(outputFormat->width, outputFormat->height));
+	gl::clear(Color(1, 0, 0));
+	gl::color(Color(1, 1, 1));
+	gl::setMatricesWindow(vec2(outputFormat->width, outputFormat->height), true);
+	gl::draw(mFBO->getColorTexture());
 	glBindVertexArray(0);
 }
 
