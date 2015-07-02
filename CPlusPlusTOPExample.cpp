@@ -117,15 +117,23 @@ CPlusPlusTOPExample::execute(const TOP_OutputFormatSpecs* outputFormat ,
 	int x = width / 2;
 	int y = height / 2;
 	mCubeRotation *= rotate(toRadians(0.2f), normalize(vec3(0, 1, 0)));
-	
+	gl::clear(Color(1, 0, 0));
 	//unbind touch's FBO
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	//switch to Cinder's shared context
 	mCinderContext->makeCurrent();
-	if (!mFBO)
-		mFBO = gl::Fbo::create(1920, 1080, true, true, false);
+	if (!mFBO){
+		gl::Fbo::Format format;
+		auto tType = outputFormat->colorBuffer0Type;
+		auto index = outputFormat->colorBufferRB[0];
+		format.attachment(GL_COLOR_ATTACHMENT0, gl::Texture2d::create(tType, index, outputFormat->width, outputFormat->height, true));
+		mFBO = gl::Fbo::create(outputFormat->width, outputFormat->height, format);
+	}
+		
 	{
 		gl::ScopedFramebuffer fbScp(mFBO);
+		gl::enableDepthWrite();
+		gl::enableDepthRead();
 		gl::clear(Color(1, .5, 0));
 
 		// setup the viewport to match the dimensions of the FBO
@@ -139,7 +147,15 @@ CPlusPlusTOPExample::execute(const TOP_OutputFormatSpecs* outputFormat ,
 
 		gl::ScopedGlslProg shaderScp(gl::getStockShader(gl::ShaderDef().color()));
 		gl::color(Color(1.0f, 0.5f, 0.25f));
-		gl::drawColorCube(vec3(0), vec3(1.));
+		
+		gl::VertBatch vb(GL_TRIANGLES);
+		vb.color(1, 0, 0);
+		vb.vertex(outputFormat->width / 2, 50);
+		vb.color(0, 1, 0);
+		vb.vertex(outputFormat->width - 50, outputFormat->height - 50);
+		vb.color(0, 0, 1);
+		vb.vertex(50, outputFormat->height - 50);
+		vb.draw();
 		gl::color(Color::white());
 	}
 	
@@ -147,12 +163,7 @@ CPlusPlusTOPExample::execute(const TOP_OutputFormatSpecs* outputFormat ,
 	
 	//rebind touch's FBO and draw our FBO's texture
 	glBindFramebuffer(GL_FRAMEBUFFER, outputFormat->FBOIndex);
-	gl::ScopedViewport scpVp(ivec2(0), vec2(outputFormat->width, outputFormat->height));
-	gl::clear(Color(1, 0, 0));
-	gl::color(Color(1, 1, 1));
-	gl::setMatricesWindow(vec2(outputFormat->width, outputFormat->height), true);
-	gl::draw(mFBO->getColorTexture());
-	glBindVertexArray(0);
+	//glBindVertexArray(0);
 }
 
 int
